@@ -4,8 +4,8 @@ out = "out"
 libs = ["lib"]
 
 remappings = [
-    '@chainlink/contracts=lib/chainlink-brownie-contracts/contracts',
-    '@solmate=lib/solmate/src/',
+    '@chainlink/contracts/=lib/chainlink-brownie-contracts/contracts/',
+    '@solmate/=lib/solmate/src/',
     'forge-std/=lib/forge-std/src/',
 ]
 
