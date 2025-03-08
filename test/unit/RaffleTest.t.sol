@@ -4,13 +4,13 @@ pragma solidity ^0.8.19;
 import {Test} from "forge-std/Test.sol";
 import {console} from "forge-std/console.sol";
 import {DeployRaffle} from "script/DeployRaffle.s.sol";
-import {HelperConfig} from "script/HelperConfig.s.sol";
+import {HelperConfig, CodeConstants} from "script/HelperConfig.s.sol";
 import {Raffle} from "src/Raffle.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 
 
-contract RaffleTest is Test {
+contract RaffleTest is Test, CodeConstants {
     Raffle public raffle;
     HelperConfig public helperConfig;
 
@@ -125,15 +125,10 @@ contract RaffleTest is Test {
 
     ///////////////////////PERFORM UPKEEP//////////////////////////
 
-    function testPerformUpkeepRevertsFalseIfCheckUpkeepIsFalse() public {
+    function testPerformUpkeepRevertsIfCheckUpkeepIsFalse() public {
         uint256 balance = 0;
         uint256 number_of_players = 0;
         Raffle.RaffleState rState = raffle.getRaffleState();
-
-        vm.prank(PLAYER);
-        raffle.enterRaffle{value: enteranceFee}();
-        balance = balance + enteranceFee;
-        number_of_players = 1;
 
         vm.expectRevert(
             abi.encodeWithSelector(Raffle.Raffle__UpkeepNotNeeded.selector, balance, number_of_players, rState)
@@ -159,7 +154,14 @@ contract RaffleTest is Test {
     }
 
     //////////////////////////FULLFILL RANDOM WORDS//////////////////////////
-    function testFullFillRandomWordsCanOnlyBeCalledAfterPerformUpkeep(uint256 requestRandomId) public playerHasEntered{
+    
+    modifier skipFork() {
+        if(block.chainid != LOCAL_CHAIN_ID){
+            return;
+        }
+        _;
+    }
+    function testFullFillRandomWordsCanOnlyBeCalledAfterPerformUpkeep(uint256 requestRandomId) public playerHasEntered skipFork{
         //Act
             //used modifier
         //Arrange //Assert
@@ -167,7 +169,7 @@ contract RaffleTest is Test {
         VRFCoordinatorV2_5Mock(vrfCoordinator).fulfillRandomWords(requestRandomId, address(raffle));
     }
 
-    function testFullFillRandomWordsPicksAWinnerResetsAndSendMoney() public playerHasEntered{
+    function testFullFillRandomWordsPicksAWinnerResetsAndSendMoney() public playerHasEntered skipFork{
         //Arrange
         uint256 additionalEntrance = 3;
         uint256 startingIndex = 1;
