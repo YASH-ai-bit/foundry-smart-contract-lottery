@@ -37,6 +37,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     //EVENTS
     event RaffleEntered(address indexed player);
     event WinnerPicked(address indexed winner);
+    event RequestedWinner(uint256 indexed requestId);
 
     constructor(
         uint256 enteranceFee,
@@ -109,7 +110,9 @@ contract Raffle is VRFConsumerBaseV2Plus {
             numWords: NUMWORDS,
             extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: false}))
         });
-        s_vrfCoordinator.requestRandomWords(request);
+        uint256 requestId = s_vrfCoordinator.requestRandomWords(request);
+
+        emit RequestedWinner(requestId);  //We already have an emit fromchainlink id , but thats okay!
     }
 
     function fulfillRandomWords(uint256, /*requestId*/ uint256[] calldata randomWords) internal override {
